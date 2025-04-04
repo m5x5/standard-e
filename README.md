@@ -18,6 +18,9 @@ bun run tauri dev
 
 ```sh
 bun tauri build --bundles app
+
+# copies the standard-e.app file to /Applications
+sudo ./scripts/macos/move-to-applications.sh
 ```
 
 ### Windows Installer
