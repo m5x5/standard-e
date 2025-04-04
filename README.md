@@ -32,3 +32,10 @@ bun tauri build
 ### Other Platforms
 
 https://v2.tauri.app/distribute/
+
+
+## Roadmap
+
+Should be installable via brew
+It should have a cask but it should also offer an MCP,
+AI should know the favorite templates of the user and what the commands are.

@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Template, FilterType, TemplateFormData } from "./types";
+import Modal from "./components/Modal";
+import SettingsModal from "./components/SettingsModal";
 import "./App.css";
 
-const templates: Template[] = [
+const STORAGE_KEY = 'standard-e-templates';
+const REPO_PATH_KEY = 'standard-e-repo-path';
+
+const defaultTemplates: Template[] = [
   {
     "id": "react-vite",
     "name": "React (Vite)",
     "command": "npm create vite@latest my-app -- --template react",
-    "image": "https://react.dev/favicon.ico",
+    "image": "/icons/react.svg",
     "language": "JavaScript",
     "framework": "React",
     "npmDownloads": "30M/week",
@@ -18,7 +23,7 @@ const templates: Template[] = [
     "id": "vue",
     "name": "Vue (Create Vue)",
     "command": "npm init vue@latest my-app",
-    "image": "https://vuejs.org/images/logo.png",
+    "image": "/icons/vue.svg",
     "language": "JavaScript",
     "framework": "Vue 3",
     "npmDownloads": "8M/week",
@@ -29,7 +34,7 @@ const templates: Template[] = [
     "id": "angular",
     "name": "Angular CLI",
     "command": "npx @angular/cli new my-app",
-    "image": "https://angular.io/assets/images/favicons/favicon.ico",
+    "image": "/icons/angular.svg",
     "language": "TypeScript",
     "framework": "Angular",
     "npmDownloads": "",
@@ -40,7 +45,7 @@ const templates: Template[] = [
     "id": "sveltekit",
     "name": "SvelteKit",
     "command": "npm create svelte@latest my-app",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Svelte_Logo.svg",
+    "image": "/icons/svelte.svg",
     "language": "TypeScript",
     "framework": "SvelteKit",
     "npmDownloads": "",
@@ -51,7 +56,7 @@ const templates: Template[] = [
     "id": "solidstart",
     "name": "SolidStart (SolidJS)",
     "command": "npm init solid@latest my-app",
-    "image": "https://api.iconify.design/devicon:solidjs.svg",
+    "image": "/icons/solid.svg",
     "language": "TypeScript",
     "framework": "SolidJS",
     "npmDownloads": "",
@@ -62,7 +67,7 @@ const templates: Template[] = [
     "id": "qwik",
     "name": "Qwik",
     "command": "npm create qwik@latest",
-    "image": "https://qwik.dev/logos/qwik.svg",
+    "image": "/icons/qwik.svg",
     "language": "TypeScript",
     "framework": "Qwik",
     "npmDownloads": "",
@@ -73,7 +78,7 @@ const templates: Template[] = [
     "id": "express",
     "name": "Express Generator",
     "command": "npx express-generator my-app",
-    "image": "https://icon.icepanel.io/Technology/svg/Express.svg",
+    "image": "/icons/express.svg",
     "language": "JavaScript",
     "framework": "Express.js",
     "npmDownloads": "25M/week",
@@ -84,7 +89,7 @@ const templates: Template[] = [
     "id": "fastify",
     "name": "Fastify CLI",
     "command": "npx fastify-cli generate my-app",
-    "image": "https://icon.icepanel.io/Technology/svg/Fastify.svg",
+    "image": "/icons/fastify.svg",
     "language": "JavaScript (or TypeScript)",
     "framework": "Fastify",
     "npmDownloads": "",
@@ -95,7 +100,7 @@ const templates: Template[] = [
     "id": "nestjs",
     "name": "NestJS CLI",
     "command": "npx @nestjs/cli new my-app",
-    "image": "https://docs.nestjs.com/favicon.ico",
+    "image": "/icons/nestjs.svg",
     "language": "TypeScript",
     "framework": "NestJS",
     "npmDownloads": "",
@@ -106,7 +111,7 @@ const templates: Template[] = [
     "id": "hono",
     "name": "Hono (create-hono)",
     "command": "npm create hono@latest my-app",
-    "image": "",
+    "image": "/icons/hono.svg",
     "language": "TypeScript",
     "framework": "Hono",
     "npmDownloads": "",
@@ -117,7 +122,7 @@ const templates: Template[] = [
     "id": "deno-fresh",
     "name": "Fresh (Deno)",
     "command": "deno run -A -r https://fresh.deno.dev my-app",
-    "image": "https://deno.land/logo.svg",
+    "image": "/icons/deno.svg",
     "language": "TypeScript",
     "framework": "Fresh (Deno)",
     "npmDownloads": "",
@@ -128,7 +133,7 @@ const templates: Template[] = [
     "id": "deno-init",
     "name": "Deno Project (deno init)",
     "command": "deno init my_project",
-    "image": "https://deno.land/logo.svg",
+    "image": "/icons/deno.svg",
     "language": "TypeScript",
     "framework": "Deno (runtime)",
     "npmDownloads": "",
@@ -139,7 +144,7 @@ const templates: Template[] = [
     "id": "nextjs",
     "name": "Next.js (Create Next App)",
     "command": "npx create-next-app@latest my-app",
-    "image": "https://nextjs.org/favicon.ico",
+    "image": "/icons/nextjs.svg",
     "language": "JavaScript",
     "framework": "Next.js",
     "npmDownloads": "15M/week",
@@ -150,7 +155,7 @@ const templates: Template[] = [
     "id": "nuxt",
     "name": "Nuxt 3 (Nuxi)",
     "command": "npm create nuxt@latest my-app",
-    "image": "https://nuxt.com/icon.png",
+    "image": "/icons/nuxt.svg",
     "language": "JavaScript/TypeScript",
     "framework": "Nuxt 3",
     "npmDownloads": "",
@@ -161,7 +166,7 @@ const templates: Template[] = [
     "id": "remix",
     "name": "Remix (Create Remix)",
     "command": "npx create-remix@latest my-app",
-    "image": "https://remix.run/favicon.ico",
+    "image": "/icons/remix.svg",
     "language": "TypeScript",
     "framework": "Remix",
     "npmDownloads": "",
@@ -172,7 +177,7 @@ const templates: Template[] = [
     "id": "redwood",
     "name": "RedwoodJS",
     "command": "yarn create redwood-app my-redwood-project",
-    "image": "",
+    "image": "/icons/redwood.svg",
     "language": "JavaScript",
     "framework": "RedwoodJS",
     "npmDownloads": "",
@@ -183,7 +188,7 @@ const templates: Template[] = [
     "id": "blitz",
     "name": "Blitz.js",
     "command": "npx blitz@latest new my-app",
-    "image": "",
+    "image": "/icons/blitz.svg",
     "language": "TypeScript",
     "framework": "Blitz.js",
     "npmDownloads": "",
@@ -194,7 +199,7 @@ const templates: Template[] = [
     "id": "astro",
     "name": "Astro",
     "command": "npm create astro@latest",
-    "image": "",
+    "image": "/icons/astro.svg",
     "language": "TypeScript",
     "framework": "Astro",
     "npmDownloads": "",
@@ -205,7 +210,7 @@ const templates: Template[] = [
     "id": "hugo",
     "name": "Hugo",
     "command": "hugo new site my-site",
-    "image": "",
+    "image": "/icons/hugo.svg",
     "language": "Markdown (content)",
     "framework": "Hugo",
     "npmDownloads": "",
@@ -216,7 +221,7 @@ const templates: Template[] = [
     "id": "eleventy",
     "name": "Eleventy (Base Blog)",
     "command": "npx degit 11ty/eleventy-base-blog my-blog",
-    "image": "",
+    "image": "/icons/11ty.svg",
     "language": "JavaScript & Markdown",
     "framework": "Eleventy (11ty)",
     "npmDownloads": "",
@@ -227,7 +232,7 @@ const templates: Template[] = [
     "id": "gatsby",
     "name": "Gatsby",
     "command": "npm init gatsby my-site",
-    "image": "https://www.gatsbyjs.com/favicon-32x32.png",
+    "image": "/icons/gatsby.svg",
     "language": "JavaScript",
     "framework": "Gatsby",
     "npmDownloads": "",
@@ -238,7 +243,7 @@ const templates: Template[] = [
     "id": "turborepo",
     "name": "Turborepo (Monorepo Starter)",
     "command": "npx create-turbo@latest",
-    "image": "https://turbo.build/favicon/favicon-32x32.png",
+    "image": "/icons/turbo.svg",
     "language": "TypeScript",
     "framework": "Turborepo",
     "npmDownloads": "",
@@ -249,7 +254,7 @@ const templates: Template[] = [
     "id": "nx",
     "name": "Nx Workspace",
     "command": "npx create-nx-workspace@latest",
-    "image": "https://nx.dev/favicon.ico",
+    "image": "/icons/nx.svg",
     "language": "TypeScript",
     "framework": "Nx (monorepo)",
     "npmDownloads": "",
@@ -260,7 +265,7 @@ const templates: Template[] = [
     "id": "vite",
     "name": "Vite (Vanilla)",
     "command": "npm create vite@latest my-app",
-    "image": "https://vitejs.dev/logo.svg",
+    "image": "/icons/vite.svg",
     "language": "JavaScript",
     "framework": "Vite",
     "npmDownloads": "",
@@ -271,14 +276,14 @@ const templates: Template[] = [
     "id": "bun",
     "name": "Bun Create (Next.js)",
     "command": "bun create next-app ./my-app",
-    "image": "https://bun.sh/logo.svg",
+    "image": "/icons/bun.svg",
     "language": "JavaScript/TypeScript",
     "framework": "Bun + Next.js",
     "npmDownloads": "2M/week",
     "githubStars": "45k",
     "lastUpdated": "1 day ago"
   }
-]
+];
 
 function App() {
   const [search, setSearch] = useState("");
@@ -286,9 +291,34 @@ function App() {
   const [filterValue, setFilterValue] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [localTemplates, setLocalTemplates] = useState<Template[]>(templates);
+  const [localTemplates, setLocalTemplates] = useState<Template[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
+  const [repoPath, setRepoPath] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Load templates and repo path from localStorage
+  useEffect(() => {
+    const savedTemplates = localStorage.getItem(STORAGE_KEY);
+    const savedPath = localStorage.getItem(REPO_PATH_KEY);
+    
+    if (savedTemplates) {
+      setLocalTemplates(JSON.parse(savedTemplates));
+    } else {
+      setLocalTemplates(defaultTemplates);
+    }
+    
+    if (savedPath) {
+      setRepoPath(savedPath);
+    }
+  }, []);
+
+  // Save templates to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(localTemplates));
+  }, [localTemplates]);
 
   const filteredTemplates = localTemplates.filter(template => {
+    if (!search && !filterValue) return true;
     const matchesSearch = template.name.toLowerCase().includes(search.toLowerCase()) ||
                          template.command.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = !filterValue || template[filterType].toLowerCase() === filterValue.toLowerCase();
@@ -300,8 +330,15 @@ function App() {
   };
 
   const openInCursor = () => {
-    // Using Tauri API to open in Cursor
-    window.__TAURI__.shell.open('cursor://');
+    if (!repoPath) {
+      setShowSettings(true);
+      return;
+    }
+    if (window.__TAURI__?.shell) {
+      window.__TAURI__.shell.open(`cursor://${repoPath}`);
+    } else {
+      alert('Cursor integration is not available. Please make sure you are running this app in Cursor.');
+    }
   };
 
   const handleAddTemplate = (formData: TemplateFormData) => {
@@ -325,14 +362,45 @@ function App() {
     setLocalTemplates(localTemplates.filter(t => t.id !== id));
   };
 
+  const handleSaveSettings = (path: string) => {
+    setRepoPath(path);
+    localStorage.setItem(REPO_PATH_KEY, path);
+    setShowSettings(false);
+  };
+
+  const handleRestoreDefaults = () => {
+    setLocalTemplates(defaultTemplates);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
   return (
     <main className="container">
       <div className="header">
         <h1>Choose your template</h1>
         <div className="header-actions">
-          <button type="button" onClick={openInCursor} className="edit-button">
-            Edit in Cursor
-          </button>
+          <div className="menu-container">
+            <button 
+              type="button" 
+              className="menu-button"
+              onClick={() => setShowMenu(!showMenu)}
+              aria-label="Menu"
+            >
+              ⋮
+            </button>
+            {showMenu && (
+              <div className="menu-dropdown">
+                <button type="button" onClick={openInCursor}>
+                  Edit in Cursor
+                </button>
+                <button type="button" onClick={() => setShowSettings(true)}>
+                  Settings
+                </button>
+                <button type="button" onClick={handleRestoreDefaults}>
+                  Restore Defaults
+                </button>
+              </div>
+            )}
+          </div>
           <button type="button" onClick={() => setShowAddForm(true)} className="add-button">
             Add Template
           </button>
@@ -411,72 +479,29 @@ function App() {
         ))}
       </div>
 
-      {(showAddForm || editingTemplate) && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>{editingTemplate ? 'Edit Template' : 'Add New Template'}</h2>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const data: TemplateFormData = {
-                name: formData.get('name') as string,
-                command: formData.get('command') as string,
-                image: formData.get('image') as string,
-                language: formData.get('language') as string,
-                framework: formData.get('framework') as string,
-                npmDownloads: formData.get('npmDownloads') as string,
-                githubStars: formData.get('githubStars') as string,
-                lastUpdated: formData.get('lastUpdated') as string
-              };
-              if (editingTemplate) {
-                handleEditTemplate(data);
-              } else {
-                handleAddTemplate(data);
-              }
-            }}>
-              <div className="form-group">
-                <label htmlFor="name">Name</label>
-                <input type="text" id="name" name="name" defaultValue={editingTemplate?.name} required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="command">Command</label>
-                <input type="text" id="command" name="command" defaultValue={editingTemplate?.command} required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="image">Image URL</label>
-                <input type="url" id="image" name="image" defaultValue={editingTemplate?.image} required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="language">Language</label>
-                <input type="text" id="language" name="language" defaultValue={editingTemplate?.language} required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="framework">Framework</label>
-                <input type="text" id="framework" name="framework" defaultValue={editingTemplate?.framework} required />
-              </div>
-              <div className="form-group">
-                <label htmlFor="npmDownloads">NPM Downloads</label>
-                <input type="text" id="npmDownloads" name="npmDownloads" defaultValue={editingTemplate?.npmDownloads} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="githubStars">GitHub Stars</label>
-                <input type="text" id="githubStars" name="githubStars" defaultValue={editingTemplate?.githubStars} />
-              </div>
-              <div className="form-group">
-                <label htmlFor="lastUpdated">Last Updated</label>
-                <input type="text" id="lastUpdated" name="lastUpdated" defaultValue={editingTemplate?.lastUpdated} />
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={() => {
-                  setShowAddForm(false);
-                  setEditingTemplate(null);
-                }}>Cancel</button>
-                <button type="submit">{editingTemplate ? 'Save Changes' : 'Add Template'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal 
+        isOpen={showAddForm || !!editingTemplate}
+        onClose={() => {
+          setShowAddForm(false);
+          setEditingTemplate(null);
+        }}
+        onSubmit={(data) => {
+          if (editingTemplate) {
+            handleEditTemplate(data);
+          } else {
+            handleAddTemplate(data);
+          }
+        }}
+        title={editingTemplate ? 'Edit Template' : 'Add New Template'}
+        initialData={editingTemplate || undefined}
+      />
+
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onSave={handleSaveSettings}
+        currentPath={repoPath}
+      />
     </main>
   );
 }
